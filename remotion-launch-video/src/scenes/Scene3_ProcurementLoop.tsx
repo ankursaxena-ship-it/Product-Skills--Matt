@@ -1,45 +1,69 @@
 import React from "react";
-import { AbsoluteFill, useCurrentFrame, spring, interpolate, useVideoConfig } from "remotion";
-import { colors } from "../styles";
+import {
+  AbsoluteFill,
+  useCurrentFrame,
+  spring,
+  interpolate,
+  useVideoConfig,
+} from "remotion";
 
+const NAVY = "#1B2A4A";
+const TEAL = "#0EA47A";
+const DARK = "#111827";
+const GRAY = "#6B7280";
+
+/* Items around each ring */
 const leftItems = [
-  { label: "1. Bounded\nScheduling", sub: "(Guaranteed Capacity)" },
-  { label: "2. Exact FSN\nMapping", sub: "(Zero Quantity Variance)" },
-  { label: "3. 16-Digit OCR\nValidation", sub: "(Automated Intake)" },
+  { label: "Bounded\nScheduling", sub: "(Guaranteed Capacity)", angle: -90 },
+  { label: "Exact FSN\nMapping", sub: "(Zero Quantity Variance)", angle: -200 },
+  { label: "16-Digit OCR\nValidation", sub: "(Automated Intake)", angle: -310 },
 ];
 
 const rightItems = [
-  { label: "1. Elimination of\nDebit Notes", sub: "(PDN/QDN eradicated)" },
-  { label: "2. Instant 3-Way\nMatching", sub: "(System automation)" },
-  { label: "3. Faster Payment TAT", sub: "(Accelerated capital flow)" },
+  { label: "Elimination of\nDebit Notes", sub: "(PDN/QDN eradicated)", angle: -70 },
+  { label: "Instant 3-Way\nMatching", sub: "(System automation)", angle: -320 },
+  { label: "Faster Payment TAT", sub: "(Accelerated capital flow)", angle: -200 },
 ];
+
+const CX = 960; // center x of the whole composition
+const CY = 530;
+const RING_OFFSET = 210; // each ring center is offset by this from CX
+const RING_R = 200;
+const ITEM_R = 280; // radius at which labels sit
 
 export const Scene3_ProcurementLoop: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const titleProgress = spring({ frame: frame - 5, fps, config: { damping: 12 } });
-  const leftLabelProgress = spring({ frame: frame - 15, fps, config: { damping: 12 } });
-  const rightLabelProgress = spring({ frame: frame - 20, fps, config: { damping: 12 } });
-  const ringProgress = interpolate(frame - 25, [0, 40], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  const centerProgress = spring({ frame: frame - 50, fps, config: { damping: 10 } });
+  const titleIn = spring({ frame: frame - 5, fps, config: { damping: 14 } });
+  const leftLabelIn = spring({ frame: frame - 14, fps, config: { damping: 14 } });
+  const rightLabelIn = spring({ frame: frame - 20, fps, config: { damping: 14 } });
 
-  const cx = 960;
-  const cy = 540;
-  const radius = 220;
+  const ringDraw = interpolate(frame - 22, [0, 45], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const circumference = 2 * Math.PI * RING_R;
+
+  const centerIn = spring({ frame: frame - 55, fps, config: { damping: 10, stiffness: 60 } });
 
   return (
-    <AbsoluteFill
-      style={{
-        background: colors.white,
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      }}
-    >
+    <AbsoluteFill style={{ background: "#FFFFFF", fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif" }}>
       {/* Browser bar */}
-      <div style={{ height: 36, background: colors.lightGray, display: "flex", alignItems: "center", paddingLeft: 16, gap: 6 }}>
-        <div style={{ width: 10, height: 10, borderRadius: "50%", background: colors.navy }} />
-        <div style={{ width: 10, height: 10, borderRadius: "50%", background: colors.navy }} />
-        <div style={{ width: 10, height: 10, borderRadius: "50%", background: colors.navy }} />
+      <div
+        style={{
+          height: 38,
+          background: "#F2F4F7",
+          display: "flex",
+          alignItems: "center",
+          paddingLeft: 18,
+          gap: 7,
+          borderBottom: "1px solid #E5E7EB",
+        }}
+      >
+        <div style={{ width: 11, height: 11, borderRadius: "50%", background: NAVY, opacity: 0.7 }} />
+        <div style={{ width: 11, height: 11, borderRadius: "50%", background: NAVY, opacity: 0.5 }} />
+        <div style={{ width: 11, height: 11, borderRadius: "50%", background: NAVY, opacity: 0.3 }} />
       </div>
 
       {/* Title */}
@@ -47,165 +71,216 @@ export const Scene3_ProcurementLoop: React.FC = () => {
         style={{
           fontSize: 52,
           fontWeight: 800,
-          color: colors.darkText,
+          color: DARK,
           textAlign: "center",
-          marginTop: 30,
-          opacity: titleProgress,
-          transform: `translateY(${interpolate(titleProgress, [0, 1], [30, 0])}px)`,
+          marginTop: 35,
+          opacity: titleIn,
+          transform: `translateY(${interpolate(titleIn, [0, 1], [30, 0])}px)`,
         }}
       >
         The Defect-Free Procurement Loop
       </div>
 
       {/* Section labels */}
-      <div style={{ display: "flex", justifyContent: "center", gap: 350, marginTop: 15 }}>
-        <div
-          style={{
-            fontSize: 28,
-            fontWeight: 700,
-            color: colors.navy,
-            opacity: leftLabelProgress,
-          }}
-        >
+      <div style={{ display: "flex", justifyContent: "center", gap: 340, marginTop: 16 }}>
+        <div style={{ fontSize: 26, fontWeight: 700, color: NAVY, opacity: leftLabelIn }}>
           Operational Discipline
         </div>
-        <div
-          style={{
-            fontSize: 28,
-            fontWeight: 700,
-            color: colors.teal,
-            opacity: rightLabelProgress,
-          }}
-        >
+        <div style={{ fontSize: 26, fontWeight: 700, color: TEAL, opacity: rightLabelIn }}>
           Financial Velocity
         </div>
       </div>
 
-      {/* Infinity loop / double ring */}
+      {/* SVG rings */}
       <svg
-        width="1920"
-        height="700"
-        viewBox="0 0 1920 700"
+        width={1920}
+        height={700}
+        viewBox={`0 0 1920 700`}
         style={{ position: "absolute", top: 200 }}
       >
-        {/* Left arc - Operational Discipline (navy) */}
-        <circle
-          cx={cx - 200}
-          cy={340}
-          r={radius}
-          fill="none"
-          stroke={colors.navy}
-          strokeWidth="28"
-          strokeDasharray={2 * Math.PI * radius}
-          strokeDashoffset={2 * Math.PI * radius * (1 - ringProgress)}
-          strokeLinecap="round"
-        />
-        {/* Right arc - Financial Velocity (teal) */}
-        <circle
-          cx={cx + 200}
-          cy={340}
-          r={radius}
-          fill="none"
-          stroke={colors.teal}
-          strokeWidth="28"
-          strokeDasharray={2 * Math.PI * radius}
-          strokeDashoffset={2 * Math.PI * radius * (1 - ringProgress)}
-          strokeLinecap="round"
-        />
-
-        {/* Center circle */}
-        <circle
-          cx={cx}
-          cy={340}
-          r={120}
-          fill={colors.white}
-          stroke="#E0E0E0"
-          strokeWidth="2"
-          opacity={centerProgress}
-          filter="url(#shadow)"
-        />
         <defs>
-          <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor="#00000020" />
+          <filter id="centerShadow">
+            <feDropShadow dx="0" dy="5" stdDeviation="12" floodColor="#00000015" />
           </filter>
         </defs>
+
+        {/* Left ring – navy with subtle inner ring */}
+        <circle
+          cx={CX - RING_OFFSET}
+          cy={CY - 200}
+          r={RING_R}
+          fill="none"
+          stroke={NAVY}
+          strokeWidth="32"
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference * (1 - ringDraw)}
+          strokeLinecap="round"
+          opacity="0.85"
+        />
+        <circle
+          cx={CX - RING_OFFSET}
+          cy={CY - 200}
+          r={RING_R}
+          fill="none"
+          stroke="white"
+          strokeWidth="4"
+          strokeDasharray="8 18"
+          opacity={ringDraw * 0.3}
+        />
+
+        {/* Right ring – teal */}
+        <circle
+          cx={CX + RING_OFFSET}
+          cy={CY - 200}
+          r={RING_R}
+          fill="none"
+          stroke={TEAL}
+          strokeWidth="32"
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference * (1 - ringDraw)}
+          strokeLinecap="round"
+          opacity="0.85"
+        />
+        <circle
+          cx={CX + RING_OFFSET}
+          cy={CY - 200}
+          r={RING_R}
+          fill="none"
+          stroke="white"
+          strokeWidth="4"
+          strokeDasharray="8 18"
+          opacity={ringDraw * 0.3}
+        />
+
+        {/* Center circle – white with shadow */}
+        <circle
+          cx={CX}
+          cy={CY - 200}
+          r={115}
+          fill="white"
+          filter="url(#centerShadow)"
+          opacity={centerIn}
+        />
+        <circle
+          cx={CX}
+          cy={CY - 200}
+          r={115}
+          fill="none"
+          stroke="#E5E7EB"
+          strokeWidth="1.5"
+          opacity={centerIn}
+        />
       </svg>
 
-      {/* Center text */}
+      {/* Center quote text */}
       <div
         style={{
           position: "absolute",
-          top: 440,
-          left: cx - 110,
-          width: 220,
+          left: CX - 105,
+          top: CY - 200 + 200 - 65,
+          width: 210,
           textAlign: "center",
-          fontSize: 18,
+          fontSize: 16.5,
           fontWeight: 600,
-          color: colors.darkText,
-          lineHeight: 1.5,
-          opacity: centerProgress,
-          transform: `scale(${interpolate(centerProgress, [0, 1], [0.8, 1])})`,
+          color: DARK,
+          lineHeight: 1.55,
+          opacity: centerIn,
+          transform: `scale(${interpolate(centerIn, [0, 1], [0.85, 1])})`,
         }}
       >
         Strict UI compliance isn't just an operational requirement—it is the mechanism that protects and accelerates your revenue.
       </div>
 
-      {/* Left items */}
+      {/* Left ring labels */}
       {leftItems.map((item, i) => {
-        const itemProgress = spring({ frame: frame - 55 - i * 10, fps, config: { damping: 12 } });
-        const angles = [-60, -150, -240];
-        const angle = (angles[i] * Math.PI) / 180;
-        const ix = cx - 200 + Math.cos(angle) * (radius + 80);
-        const iy = 540 + Math.sin(angle) * (radius + 80);
+        const itemIn = spring({ frame: frame - 60 - i * 9, fps, config: { damping: 12 } });
+        const rad = (item.angle * Math.PI) / 180;
+        const ix = CX - RING_OFFSET + Math.cos(rad) * ITEM_R;
+        const iy = CY - 200 + 200 + Math.sin(rad) * ITEM_R;
 
         return (
           <div
-            key={i}
+            key={`l${i}`}
             style={{
               position: "absolute",
-              left: ix - 120,
-              top: iy - 30,
+              left: ix - 80,
+              top: iy - 25,
               width: 160,
               textAlign: "center",
-              opacity: itemProgress,
-              transform: `scale(${interpolate(itemProgress, [0, 1], [0.7, 1])})`,
+              opacity: itemIn,
+              transform: `scale(${interpolate(itemIn, [0, 1], [0.6, 1])})`,
             }}
           >
-            <div style={{ width: 44, height: 44, borderRadius: "50%", background: colors.lightGray, border: `2px solid ${colors.navy}`, margin: "0 auto 8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <div style={{ width: 20, height: 20, background: colors.navy, borderRadius: 4, opacity: 0.5 }} />
+            {/* Small icon badge */}
+            <div
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: "50%",
+                background: "#F2F4F7",
+                border: `2.5px solid ${NAVY}`,
+                margin: "0 auto 6px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20">
+                <rect x="3" y="3" width="14" height="14" rx="2" fill="none" stroke={NAVY} strokeWidth="1.8" />
+                <line x1="7" y1="8" x2="13" y2="8" stroke={NAVY} strokeWidth="1.2" />
+                <line x1="7" y1="12" x2="11" y2="12" stroke={NAVY} strokeWidth="1.2" />
+              </svg>
             </div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: colors.navy, whiteSpace: "pre-line", lineHeight: 1.2 }}>{item.label}</div>
-            <div style={{ fontSize: 13, color: colors.gray }}>{item.sub}</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: NAVY, whiteSpace: "pre-line", lineHeight: 1.2 }}>
+              {`${i + 1}. ${item.label}`}
+            </div>
+            <div style={{ fontSize: 12.5, color: GRAY, marginTop: 2 }}>{item.sub}</div>
           </div>
         );
       })}
 
-      {/* Right items */}
+      {/* Right ring labels */}
       {rightItems.map((item, i) => {
-        const itemProgress = spring({ frame: frame - 60 - i * 10, fps, config: { damping: 12 } });
-        const angles = [-120, -30, 60];
-        const angle = (angles[i] * Math.PI) / 180;
-        const ix = cx + 200 + Math.cos(angle) * (radius + 80);
-        const iy = 540 + Math.sin(angle) * (radius + 80);
+        const itemIn = spring({ frame: frame - 65 - i * 9, fps, config: { damping: 12 } });
+        const rad = (item.angle * Math.PI) / 180;
+        const ix = CX + RING_OFFSET + Math.cos(rad) * ITEM_R;
+        const iy = CY - 200 + 200 + Math.sin(rad) * ITEM_R;
 
         return (
           <div
-            key={i}
+            key={`r${i}`}
             style={{
               position: "absolute",
               left: ix - 80,
-              top: iy - 30,
+              top: iy - 25,
               width: 160,
               textAlign: "center",
-              opacity: itemProgress,
-              transform: `scale(${interpolate(itemProgress, [0, 1], [0.7, 1])})`,
+              opacity: itemIn,
+              transform: `scale(${interpolate(itemIn, [0, 1], [0.6, 1])})`,
             }}
           >
-            <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#E6F9F3", border: `2px solid ${colors.teal}`, margin: "0 auto 8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <div style={{ width: 20, height: 20, background: colors.teal, borderRadius: 4, opacity: 0.5 }} />
+            <div
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: "50%",
+                background: "#E6F9F3",
+                border: `2.5px solid ${TEAL}`,
+                margin: "0 auto 6px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 20 20">
+                <circle cx="10" cy="10" r="7" fill="none" stroke={TEAL} strokeWidth="1.8" />
+                <polyline points="7,10 9,13 14,7" fill="none" stroke={TEAL} strokeWidth="1.5" />
+              </svg>
             </div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: colors.teal, whiteSpace: "pre-line", lineHeight: 1.2 }}>{item.label}</div>
-            <div style={{ fontSize: 13, color: colors.gray }}>{item.sub}</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: TEAL, whiteSpace: "pre-line", lineHeight: 1.2 }}>
+              {`${i + 1}. ${item.label}`}
+            </div>
+            <div style={{ fontSize: 12.5, color: GRAY, marginTop: 2 }}>{item.sub}</div>
           </div>
         );
       })}

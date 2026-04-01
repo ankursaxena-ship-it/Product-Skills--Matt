@@ -1,197 +1,253 @@
-import React from "react";
-import { AbsoluteFill, useCurrentFrame, spring, interpolate, useVideoConfig } from "remotion";
-import { colors } from "../styles";
+import React, { CSSProperties } from "react";
+import {
+  AbsoluteFill,
+  useCurrentFrame,
+  spring,
+  interpolate,
+  useVideoConfig,
+} from "remotion";
 
-interface CardData {
-  icon: string;
-  iconColor: string;
-  title: string;
-  bullets: string[];
-  highlightIndex?: number;
-  highlightColor?: string;
-}
+const NAVY = "#1B2A4A";
+const TEAL = "#0EA47A";
+const BLUE = "#3B82F6";
+const ORANGE = "#F59E0B";
+const DARK = "#111827";
+const GRAY = "#6B7280";
+const BG = "#F2F4F7";
 
-const cards: CardData[] = [
-  {
-    icon: "truck",
-    iconColor: colors.navy,
-    title: "Logistics & Freight\nOptimization",
-    bullets: [
-      "Maximize capacity by pooling multiple POs into single shipments for Full Truckloads (FTL).",
-      "Zero-overhead scheduling to drastically reduce distribution center congestion.",
-    ],
-  },
-  {
-    icon: "forward",
-    iconColor: colors.teal,
-    title: "Frictionless\nFinance",
-    bullets: [
-      "Seamlessly handle multiple invoices against a single blanket PO.",
-      "Automated 3-way matching drives faster reconciliation and reduced Payment Turnaround Time.",
-    ],
-    highlightIndex: 1,
-    highlightColor: colors.teal,
-  },
-  {
-    icon: "shield",
-    iconColor: colors.orange,
-    title: "Defect-Free\nProcurement",
-    bullets: [
-      "Real-time tracking upstream.",
-      "Drastically reduces Price (PDN), Quality (QDN), and Short-Supply Debit Notes.",
-    ],
-    highlightIndex: 1,
-    highlightColor: colors.orange,
-  },
-];
+/* ── icon components (matching the slide exactly) ── */
 
 const TruckIcon: React.FC = () => (
-  <svg width="50" height="50" viewBox="0 0 50 50">
-    <rect x="5" y="15" width="28" height="22" rx="3" fill="none" stroke={colors.navy} strokeWidth="2.5" />
-    <path d="M33 22 H42 L47 30 V37 H33 Z" fill="none" stroke={colors.navy} strokeWidth="2.5" />
-    <circle cx="15" cy="40" r="4" fill="none" stroke={colors.navy} strokeWidth="2.5" />
-    <circle cx="40" cy="40" r="4" fill="none" stroke={colors.navy} strokeWidth="2.5" />
-    <rect x="10" y="20" width="8" height="3" rx="1" fill={colors.navy} opacity="0.3" />
-    <rect x="10" y="26" width="12" height="3" rx="1" fill={colors.navy} opacity="0.3" />
+  <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+    <rect x="4" y="16" width="30" height="22" rx="3" stroke={NAVY} strokeWidth="2.8" />
+    <path d="M34 22H43L48 30V38H34V22Z" stroke={NAVY} strokeWidth="2.8" strokeLinejoin="round" />
+    <circle cx="15" cy="40" r="4.5" stroke={NAVY} strokeWidth="2.5" />
+    <circle cx="41" cy="40" r="4.5" stroke={NAVY} strokeWidth="2.5" />
+    {/* Boxes on truck */}
+    <rect x="8" y="20" width="10" height="8" rx="1.5" fill={NAVY} opacity="0.15" />
+    <rect x="20" y="20" width="10" height="8" rx="1.5" fill={NAVY} opacity="0.1" />
+    <rect x="12" y="12" width="8" height="6" rx="1.5" fill={NAVY} opacity="0.12" />
   </svg>
 );
 
 const ForwardIcon: React.FC = () => (
-  <svg width="50" height="50" viewBox="0 0 50 50">
-    <polygon points="10,12 28,25 10,38" fill={colors.teal} />
-    <polygon points="24,12 42,25 24,38" fill={colors.teal} />
+  <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+    <polygon points="8,14 24,26 8,38" fill={TEAL} />
+    <polygon points="24,14 40,26 24,38" fill={TEAL} />
   </svg>
 );
 
 const ShieldIcon: React.FC = () => (
-  <svg width="50" height="50" viewBox="0 0 50 50">
-    <path d="M25 5 L42 14 V28 C42 38 25 47 25 47 C25 47 8 38 8 28 V14 Z" fill={colors.orange} />
-    <polyline points="17,26 23,32 35,20" fill="none" stroke={colors.white} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" />
+  <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+    <path
+      d="M26 4L44 14V28C44 39 26 49 26 49C26 49 8 39 8 28V14L26 4Z"
+      fill={ORANGE}
+    />
+    <polyline
+      points="17,27 23,33 36,20"
+      stroke="white"
+      strokeWidth="4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
-const icons: Record<string, React.FC> = { truck: TruckIcon, forward: ForwardIcon, shield: ShieldIcon };
+/* ── card data ── */
+interface CardInfo {
+  icon: React.FC;
+  iconBorder: string;
+  title: string;
+  bullets: { text: string; highlight?: boolean; borderColor?: string }[];
+}
 
+const cards: CardInfo[] = [
+  {
+    icon: TruckIcon,
+    iconBorder: NAVY,
+    title: "Logistics & Freight\nOptimization",
+    bullets: [
+      { text: "Maximize capacity by pooling multiple POs into single shipments for Full Truckloads (FTL)." },
+      { text: "Zero-overhead scheduling to drastically reduce distribution center congestion." },
+    ],
+  },
+  {
+    icon: ForwardIcon,
+    iconBorder: NAVY,
+    title: "Frictionless\nFinance",
+    bullets: [
+      { text: "Seamlessly handle multiple invoices against a single blanket PO." },
+      {
+        text: "Automated 3-way matching drives faster reconciliation and reduced Payment Turnaround Time.",
+        highlight: true,
+        borderColor: TEAL,
+      },
+    ],
+  },
+  {
+    icon: ShieldIcon,
+    iconBorder: NAVY,
+    title: "Defect-Free\nProcurement",
+    bullets: [
+      { text: "Real-time tracking upstream." },
+      {
+        text: "Drastically reduces Price (PDN), Quality (QDN), and Short-Supply Debit Notes.",
+        highlight: true,
+        borderColor: ORANGE,
+      },
+    ],
+  },
+];
+
+/* ── browser dots component ── */
+const BrowserDots: React.FC = () => (
+  <div style={{ display: "flex", gap: 7, padding: "14px 18px" }}>
+    <div style={{ width: 11, height: 11, borderRadius: "50%", background: NAVY, opacity: 0.7 }} />
+    <div style={{ width: 11, height: 11, borderRadius: "50%", background: NAVY, opacity: 0.5 }} />
+    <div style={{ width: 11, height: 11, borderRadius: "50%", background: NAVY, opacity: 0.3 }} />
+  </div>
+);
+
+/* ── main scene ── */
 export const Scene2_BusinessCapabilities: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const titleProgress = spring({ frame: frame - 5, fps, config: { damping: 12 } });
+  const titleIn = spring({ frame: frame - 5, fps, config: { damping: 14 } });
 
   return (
     <AbsoluteFill
       style={{
-        background: `linear-gradient(180deg, ${colors.lightGray} 0%, #E8EDF3 100%)`,
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        padding: "60px 80px",
+        background: BG,
+        fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
+        padding: "55px 70px",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
-      {/* Title */}
+      {/* Section title */}
       <div
         style={{
-          fontSize: 58,
+          fontSize: 56,
           fontWeight: 800,
-          color: colors.darkText,
-          marginBottom: 50,
-          opacity: titleProgress,
-          transform: `translateY(${interpolate(titleProgress, [0, 1], [30, 0])}px)`,
+          color: DARK,
+          marginBottom: 45,
+          opacity: titleIn,
+          transform: `translateY(${interpolate(titleIn, [0, 1], [35, 0])}px)`,
         }}
       >
         Upgrading Your Business Capabilities
       </div>
 
-      {/* Cards */}
-      <div style={{ display: "flex", gap: 40, flex: 1, alignItems: "stretch" }}>
+      {/* Three cards */}
+      <div style={{ display: "flex", gap: 36, flex: 1 }}>
         {cards.map((card, i) => {
-          const cardProgress = spring({ frame: frame - 20 - i * 12, fps, config: { damping: 12 } });
-          const IconComponent = icons[card.icon];
+          const cardIn = spring({ frame: frame - 15 - i * 10, fps, config: { damping: 13 } });
+          const Icon = card.icon;
 
           return (
             <div
               key={i}
               style={{
                 flex: 1,
-                background: colors.white,
-                borderRadius: 16,
-                border: `2.5px solid ${colors.navy}`,
+                background: "white",
+                borderRadius: 18,
+                border: `3px solid ${NAVY}`,
                 display: "flex",
                 flexDirection: "column",
-                alignItems: "center",
-                padding: "40px 30px",
-                opacity: cardProgress,
-                transform: `translateY(${interpolate(cardProgress, [0, 1], [50, 0])}px)`,
-                position: "relative",
                 overflow: "hidden",
+                opacity: cardIn,
+                transform: `translateY(${interpolate(cardIn, [0, 1], [60, 0])}px)`,
+                boxShadow: "0 4px 24px rgba(27,42,74,0.08)",
               }}
             >
-              {/* Browser dots */}
-              <div style={{ position: "absolute", top: 12, left: 16, display: "flex", gap: 6 }}>
-                <div style={{ width: 10, height: 10, borderRadius: "50%", background: colors.navy }} />
-                <div style={{ width: 10, height: 10, borderRadius: "50%", background: colors.navy }} />
-                <div style={{ width: 10, height: 10, borderRadius: "50%", background: colors.navy }} />
+              {/* Browser chrome bar */}
+              <div style={{ borderBottom: `1.5px solid ${NAVY}20` }}>
+                <BrowserDots />
               </div>
 
-              {/* Icon circle */}
+              {/* Card content */}
               <div
                 style={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: "50%",
-                  border: `3px solid ${colors.navy}`,
+                  flex: 1,
                   display: "flex",
+                  flexDirection: "column",
                   alignItems: "center",
-                  justifyContent: "center",
-                  marginTop: 20,
-                  marginBottom: 20,
+                  padding: "28px 28px 32px",
                 }}
               >
-                <IconComponent />
-              </div>
+                {/* Icon circle */}
+                <div
+                  style={{
+                    width: 86,
+                    height: 86,
+                    borderRadius: "50%",
+                    border: `3px solid ${NAVY}`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 22,
+                  }}
+                >
+                  <Icon />
+                </div>
 
-              {/* Title */}
-              <div
-                style={{
-                  fontSize: 26,
-                  fontWeight: 700,
-                  color: colors.darkText,
-                  textAlign: "center",
-                  marginBottom: 25,
-                  whiteSpace: "pre-line",
-                  lineHeight: 1.2,
-                }}
-              >
-                {card.title}
-              </div>
+                {/* Card title */}
+                <div
+                  style={{
+                    fontSize: 25,
+                    fontWeight: 700,
+                    color: DARK,
+                    textAlign: "center",
+                    whiteSpace: "pre-line",
+                    lineHeight: 1.15,
+                    marginBottom: 24,
+                  }}
+                >
+                  {card.title}
+                </div>
 
-              {/* Bullets */}
-              {card.bullets.map((bullet, j) => {
-                const bulletProgress = spring({
-                  frame: frame - 40 - i * 12 - j * 10,
-                  fps,
-                  config: { damping: 12 },
-                });
-                const isHighlight = card.highlightIndex === j;
-
-                return (
-                  <div
-                    key={j}
-                    style={{
-                      border: `2px solid ${isHighlight ? card.highlightColor || colors.navy : colors.navy}`,
-                      borderRadius: 10,
-                      padding: "14px 18px",
-                      marginBottom: 12,
-                      width: "100%",
-                      opacity: bulletProgress,
-                      transform: `translateY(${interpolate(bulletProgress, [0, 1], [20, 0])}px)`,
-                    }}
-                  >
-                    <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                      <span style={{ color: colors.blue, fontWeight: 700, fontSize: 18 }}>&gt;</span>
-                      <span style={{ fontSize: 17, color: colors.darkText, lineHeight: 1.4 }}>{bullet}</span>
+                {/* Bullet cards */}
+                {card.bullets.map((bullet, j) => {
+                  const bulletIn = spring({
+                    frame: frame - 35 - i * 10 - j * 8,
+                    fps,
+                    config: { damping: 13 },
+                  });
+                  const bColor = bullet.highlight ? bullet.borderColor || NAVY : NAVY;
+                  return (
+                    <div
+                      key={j}
+                      style={{
+                        border: `2px solid ${bColor}`,
+                        borderRadius: 10,
+                        padding: "15px 18px",
+                        marginBottom: j < card.bullets.length - 1 ? 12 : 0,
+                        width: "100%",
+                        opacity: bulletIn,
+                        transform: `translateY(${interpolate(bulletIn, [0, 1], [18, 0])}px)`,
+                      }}
+                    >
+                      <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                        <span
+                          style={{
+                            color: BLUE,
+                            fontWeight: 800,
+                            fontSize: 18,
+                            lineHeight: "22px",
+                            flexShrink: 0,
+                          }}
+                        >
+                          &gt;
+                        </span>
+                        <span style={{ fontSize: 16.5, color: DARK, lineHeight: 1.45 }}>
+                          {bullet.text}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           );
         })}

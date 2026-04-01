@@ -6,60 +6,57 @@ import { Scene3_ProcurementLoop } from "./scenes/Scene3_ProcurementLoop";
 import { Scene4_RulesOfEngagement } from "./scenes/Scene4_RulesOfEngagement";
 import { Scene5_ASNJourney } from "./scenes/Scene5_ASNJourney";
 
-const SCENE_DURATION = 180; // 6 seconds per scene at 30fps
-const TRANSITION = 15; // 0.5s crossfade
+/*
+ * Demo-style pacing:
+ * - Each scene gets ~7 seconds (210 frames at 30fps) so a viewer can absorb
+ *   the content the way a founder would pause on each slide.
+ * - 20-frame crossfade between scenes for smooth transitions.
+ * - Total: ~33 seconds
+ */
+const SCENE_FRAMES = 210;
+const XFADE = 20;
+const STEP = SCENE_FRAMES - XFADE; // effective step between scene starts
 
-interface TransitionWrapperProps {
+const scenes = [
+  Scene1_Title,
+  Scene2_BusinessCapabilities,
+  Scene3_ProcurementLoop,
+  Scene4_RulesOfEngagement,
+  Scene5_ASNJourney,
+];
+
+const SceneWrapper: React.FC<{
   children: React.ReactNode;
-  startFrame: number;
-  duration: number;
-}
-
-const TransitionWrapper: React.FC<TransitionWrapperProps> = ({
-  children,
-  startFrame,
-  duration,
-}) => {
+  durationInFrames: number;
+}> = ({ children, durationInFrames }) => {
   const frame = useCurrentFrame();
-  const relativeFrame = frame - startFrame;
 
-  const fadeIn = interpolate(relativeFrame, [0, TRANSITION], [0, 1], {
+  const fadeIn = interpolate(frame, [0, XFADE], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-
   const fadeOut = interpolate(
-    relativeFrame,
-    [duration - TRANSITION, duration],
+    frame,
+    [durationInFrames - XFADE, durationInFrames],
     [1, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
   );
 
-  const opacity = Math.min(fadeIn, fadeOut);
-
   return (
-    <AbsoluteFill style={{ opacity }}>
+    <AbsoluteFill style={{ opacity: Math.min(fadeIn, fadeOut) }}>
       {children}
     </AbsoluteFill>
   );
 };
 
 export const ASNLaunchVideo: React.FC = () => {
-  const scenes = [
-    { component: Scene1_Title, from: 0 },
-    { component: Scene2_BusinessCapabilities, from: SCENE_DURATION - TRANSITION },
-    { component: Scene3_ProcurementLoop, from: (SCENE_DURATION - TRANSITION) * 2 },
-    { component: Scene4_RulesOfEngagement, from: (SCENE_DURATION - TRANSITION) * 3 },
-    { component: Scene5_ASNJourney, from: (SCENE_DURATION - TRANSITION) * 4 },
-  ];
-
   return (
-    <AbsoluteFill style={{ backgroundColor: "#F0F2F5" }}>
-      {scenes.map(({ component: Component, from }, i) => (
-        <Sequence key={i} from={from} durationInFrames={SCENE_DURATION}>
-          <TransitionWrapper startFrame={from} duration={SCENE_DURATION}>
+    <AbsoluteFill style={{ backgroundColor: "#F2F4F7" }}>
+      {scenes.map((Component, i) => (
+        <Sequence key={i} from={i * STEP} durationInFrames={SCENE_FRAMES}>
+          <SceneWrapper durationInFrames={SCENE_FRAMES}>
             <Component />
-          </TransitionWrapper>
+          </SceneWrapper>
         </Sequence>
       ))}
     </AbsoluteFill>

@@ -1,123 +1,179 @@
 import React from "react";
-import { AbsoluteFill, useCurrentFrame, interpolate, spring, useVideoConfig } from "remotion";
-import { colors } from "../styles";
+import {
+  AbsoluteFill,
+  useCurrentFrame,
+  interpolate,
+  spring,
+  useVideoConfig,
+} from "remotion";
+
+const NAVY = "#1B2A4A";
+const BLUE = "#3B82F6";
+const LIGHT_BG = "#F2F4F7";
+const DARK_TEXT = "#111827";
+const GRAY_TEXT = "#6B7280";
 
 export const Scene1_Title: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const titleProgress = spring({ frame: frame - 10, fps, config: { damping: 12 } });
-  const subtitleProgress = spring({ frame: frame - 25, fps, config: { damping: 12 } });
-  const tabletProgress = spring({ frame: frame - 40, fps, config: { damping: 10, stiffness: 80 } });
-  const lineGrow = interpolate(frame - 60, [0, 50], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  // Staggered animations
+  const titleIn = spring({ frame: frame - 8, fps, config: { damping: 14 } });
+  const subIn = spring({ frame: frame - 22, fps, config: { damping: 14 } });
+  const tabletIn = spring({ frame: frame - 36, fps, config: { damping: 11, stiffness: 70 } });
+  const lineGrow = interpolate(frame - 55, [0, 45], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
 
-  const nodeDelays = [70, 85, 100, 115];
-  const nodeLabels = ["CREATION", "VALIDATION", "TRANSMISSION", "ACKNOWLEDGMENT"];
-  const nodePositions = [260, 560, 860, 1160];
+  const nodes = [
+    { label: "CREATION", x: 240 },
+    { label: "VALIDATION", x: 540 },
+    { label: "TRANSMISSION", x: 840 },
+    { label: "ACKNOWLEDGMENT", x: 1140 },
+  ];
 
-  const glowPulse = Math.sin(frame * 0.06) * 0.4 + 0.6;
+  const glow = Math.sin(frame * 0.07) * 0.35 + 0.65;
 
   return (
-    <AbsoluteFill
-      style={{
-        background: `linear-gradient(180deg, ${colors.lightGray} 0%, #E2EAF2 100%)`,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      }}
-    >
-      {/* Grid background */}
-      <svg style={{ position: "absolute", width: "100%", height: "100%", opacity: 0.08 }}>
-        {Array.from({ length: 20 }).map((_, i) => (
-          <line key={`h${i}`} x1="0" y1={i * 60} x2="1920" y2={i * 60} stroke={colors.navy} strokeWidth="1" />
+    <AbsoluteFill style={{ background: LIGHT_BG, fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif" }}>
+      {/* Subtle cross-hatch grid */}
+      <svg style={{ position: "absolute", inset: 0, width: 1920, height: 1080, opacity: 0.045 }}>
+        {Array.from({ length: 25 }).map((_, i) => (
+          <React.Fragment key={`g${i}`}>
+            <line x1={0} y1={i * 48} x2={1920} y2={i * 48} stroke={NAVY} strokeWidth="0.8" />
+            <line x1={i * 48} y1={0} x2={i * 48} y2={1080} stroke={NAVY} strokeWidth="0.8" />
+          </React.Fragment>
         ))}
-        {Array.from({ length: 35 }).map((_, i) => (
-          <line key={`v${i}`} x1={i * 60} y1="0" x2={i * 60} y2="1080" stroke={colors.navy} strokeWidth="1" />
-        ))}
+        {/* Diagonal accent lines through center */}
+        <line x1={600} y1={200} x2={1320} y2={700} stroke={NAVY} strokeWidth="0.6" opacity="0.5" />
+        <line x1={1320} y1={200} x2={600} y2={700} stroke={NAVY} strokeWidth="0.6" opacity="0.5" />
+        <line x1={700} y1={180} x2={1220} y2={720} stroke={NAVY} strokeWidth="0.6" opacity="0.3" />
+        <line x1={1220} y1={180} x2={700} y2={720} stroke={NAVY} strokeWidth="0.6" opacity="0.3" />
       </svg>
 
       {/* Title */}
       <div
         style={{
-          fontSize: 90,
-          fontWeight: 800,
-          color: colors.darkText,
-          opacity: titleProgress,
-          transform: `translateY(${interpolate(titleProgress, [0, 1], [40, 0])}px)`,
-          marginBottom: 10,
-          letterSpacing: -2,
+          position: "absolute",
+          top: 110,
+          width: "100%",
+          textAlign: "center",
+          opacity: titleIn,
+          transform: `translateY(${interpolate(titleIn, [0, 1], [50, 0])}px)`,
         }}
       >
-        Mastering ASN Operations
+        <div style={{ fontSize: 96, fontWeight: 900, color: DARK_TEXT, letterSpacing: -3, lineHeight: 1 }}>
+          Mastering ASN Operations
+        </div>
       </div>
 
       {/* Subtitle */}
       <div
         style={{
-          fontSize: 44,
-          color: colors.gray,
-          fontWeight: 400,
-          opacity: subtitleProgress,
-          transform: `translateY(${interpolate(subtitleProgress, [0, 1], [30, 0])}px)`,
-          marginBottom: 60,
+          position: "absolute",
+          top: 230,
+          width: "100%",
+          textAlign: "center",
+          opacity: subIn,
+          transform: `translateY(${interpolate(subIn, [0, 1], [30, 0])}px)`,
         }}
       >
-        The Complete Vendor Hub Lifecycle Guide
+        <div style={{ fontSize: 44, fontWeight: 400, color: GRAY_TEXT, letterSpacing: -0.5 }}>
+          The Complete Vendor Hub Lifecycle Guide
+        </div>
       </div>
 
-      {/* Tablet icon */}
+      {/* Tablet / Document Icon */}
       <div
         style={{
-          opacity: tabletProgress,
-          transform: `scale(${interpolate(tabletProgress, [0, 1], [0.5, 1])})`,
-          marginBottom: 50,
+          position: "absolute",
+          top: 340,
+          left: "50%",
+          transform: `translateX(-50%) scale(${interpolate(tabletIn, [0, 1], [0.4, 1])}) rotate(${interpolate(tabletIn, [0, 1], [-8, 0])}deg)`,
+          opacity: tabletIn,
         }}
       >
-        <svg width="140" height="160" viewBox="0 0 140 160">
-          <rect x="15" y="5" width="110" height="150" rx="12" fill={colors.lightBlue} stroke={colors.blue} strokeWidth="3" />
-          <text x="70" y="50" textAnchor="middle" fontSize="28" fontWeight="bold" fill={colors.navy}>ASN</text>
-          <rect x="30" y="65" width="80" height="6" rx="3" fill={colors.blue} opacity="0.3" />
-          <rect x="30" y="80" width="60" height="6" rx="3" fill={colors.blue} opacity="0.3" />
-          <rect x="30" y="95" width="70" height="6" rx="3" fill={colors.blue} opacity="0.3" />
-          <rect x="30" y="115" width="35" height="20" rx="4" fill={colors.blue} opacity="0.2" />
-          <rect x="75" y="115" width="35" height="20" rx="4" fill={colors.teal} opacity="0.2" />
+        <svg width="180" height="210" viewBox="0 0 180 210">
+          {/* Tablet body */}
+          <rect x="18" y="8" width="144" height="194" rx="16" fill="#E8F0FE" stroke="#B4C6E0" strokeWidth="2.5" />
+          <rect x="18" y="8" width="144" height="194" rx="16" fill="url(#tabletGrad)" />
+          <defs>
+            <linearGradient id="tabletGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#F0F6FF" />
+              <stop offset="100%" stopColor="#D6E4F5" />
+            </linearGradient>
+          </defs>
+
+          {/* ASN header text */}
+          <text x="90" y="62" textAnchor="middle" fontSize="36" fontWeight="800" fontStyle="italic" fill={NAVY}>
+            ASN
+          </text>
+
+          {/* Document lines */}
+          <rect x="38" y="82" width="104" height="7" rx="3.5" fill={BLUE} opacity="0.18" />
+          <rect x="38" y="98" width="80" height="7" rx="3.5" fill={BLUE} opacity="0.14" />
+          <rect x="38" y="114" width="92" height="7" rx="3.5" fill={BLUE} opacity="0.18" />
+
+          {/* Mini charts at bottom */}
+          <rect x="38" y="136" width="42" height="28" rx="5" fill={BLUE} opacity="0.08" />
+          <rect x="38" y="140" width="8" height="20" rx="2" fill={BLUE} opacity="0.3" transform="translate(4,0)" />
+          <rect x="38" y="145" width="8" height="15" rx="2" fill={BLUE} opacity="0.25" transform="translate(16,0)" />
+          <rect x="38" y="138" width="8" height="22" rx="2" fill={BLUE} opacity="0.35" transform="translate(28,0)" />
+
+          <rect x="92" y="136" width="50" height="28" rx="5" fill={BLUE} opacity="0.08" />
+          {/* Checkmark icon */}
+          <circle cx="107" cy="150" r="8" fill="none" stroke={BLUE} strokeWidth="1.5" opacity="0.3" />
+          <circle cx="127" cy="150" r="8" fill="none" stroke={BLUE} strokeWidth="1.5" opacity="0.3" />
+
+          {/* Screen edge highlight */}
+          <rect x="20" y="10" width="140" height="40" rx="14" fill="white" opacity="0.15" />
         </svg>
       </div>
 
       {/* Timeline */}
-      <svg width="1420" height="80" style={{ position: "relative" }}>
-        {/* Line */}
+      <svg
+        width="1380"
+        height="90"
+        viewBox="0 0 1380 90"
+        style={{ position: "absolute", top: 680, left: 270 }}
+      >
+        {/* Connecting line */}
         <line
-          x1="260"
-          y1="30"
-          x2={interpolate(lineGrow, [0, 1], [260, 1160])}
-          y2="30"
-          stroke={colors.blue}
-          strokeWidth="3"
+          x1={nodes[0].x}
+          y1={30}
+          x2={interpolate(lineGrow, [0, 1], [nodes[0].x, nodes[3].x])}
+          y2={30}
+          stroke={BLUE}
+          strokeWidth="3.5"
         />
 
         {/* Nodes */}
-        {nodePositions.map((x, i) => {
-          const nodeProgress = spring({ frame: frame - nodeDelays[i], fps, config: { damping: 10 } });
+        {nodes.map((node, i) => {
+          const nodeIn = spring({
+            frame: frame - 65 - i * 12,
+            fps,
+            config: { damping: 10 },
+          });
           return (
-            <g key={i} opacity={nodeProgress}>
-              {/* Glow */}
-              <circle cx={x} cy={30} r={18} fill={colors.blue} opacity={glowPulse * 0.3} />
-              {/* Node */}
-              <circle cx={x} cy={30} r={10} fill={colors.blue} stroke={colors.white} strokeWidth="3" />
+            <g key={i} opacity={nodeIn}>
+              {/* Outer glow */}
+              <circle cx={node.x} cy={30} r={22} fill={BLUE} opacity={glow * 0.18} />
+              {/* Mid ring */}
+              <circle cx={node.x} cy={30} r={14} fill={BLUE} opacity={0.25} />
+              {/* Core dot */}
+              <circle cx={node.x} cy={30} r={8} fill={BLUE} stroke="white" strokeWidth="3" />
               {/* Label */}
               <text
-                x={x}
-                y={65}
+                x={node.x}
+                y={70}
                 textAnchor="middle"
-                fontSize="18"
+                fontSize="17"
                 fontWeight="700"
-                fill={colors.darkText}
-                letterSpacing="2"
+                fill={DARK_TEXT}
+                letterSpacing="2.5"
               >
-                {nodeLabels[i]}
+                {node.label}
               </text>
             </g>
           );
